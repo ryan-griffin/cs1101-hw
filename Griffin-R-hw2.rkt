@@ -4,7 +4,6 @@
 ; 1 )
 
 ; make-roadracer: Number Number String Number -> Roadracer
-
 (define-struct roadracer (rate max-psi frame wheelsize))
 
 ; Roadracer is (make-roadracer Number Number String Number)
