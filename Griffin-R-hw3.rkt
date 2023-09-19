@@ -8,10 +8,11 @@
 
 ; (define (requisition-fcn requisition)
 ;         (...
-;         (requisition-name requisition)
-;         (requisition-category requisition)
-;         (requisition-seasonal? requisition)
-;         (requisition-price quantity
+;          (requisition-name requisition)
+;          (requisition-category requisition)
+;          (requisition-seasonal? requisition)
+;          (requisition-price requisition
+;          (requisition-quantity requisition)
 ;         ...)) 
 
 (define REQ1 (make-requisition "candy" "food" false 2 10))
@@ -22,6 +23,29 @@
 ;   empty
 ;   (cons requisition Invoice)
 ;   interp: An invoice is a list of requisitions
+;
+; (define (invoice-fcn invoice)
+;         (cond [(empty? invoice) (...)]
+;               [() (...)]))
+
+; list-expensive-clothes: Invoice Number -> Invoice
+(define (list-expensive-clothes invoice threshold)
+  (cond [(empty? invoice) empty]
+        [(and (string=? (requisition-category (first invoice)) "clothing")
+              (> (requisition-price (first invoice)) threshold))
+         (cons (first invoice) (list-expensive-clothes (rest invoice) threshold))]
+        [else (list-expensive-clothes (rest invoice) threshold)]))
+
+; double-check?: Invoice -> Boolean
+(define (double-check? invoice)
+  (cond [(empty? invoice) empty]
+        [(> (requisition-quantity (first invoice)) 1) true]
+        [else (double-check? (rest invoice))]))
+
+; count-books: Invoice -> Number
+(define (count-books invoice)
+  (cond [(empty? invoice) empty]
+        [(requisition-quantity (first invoice))]))
 
 (define INVOICE1 (list REQ1 REQ2 REQ3))
 (define INVOICE2 (list REQ1 REQ2 REQ3 (make-requisition "t-shirts" "clothing" true 9 6)))
