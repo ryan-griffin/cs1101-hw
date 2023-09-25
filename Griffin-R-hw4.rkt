@@ -73,4 +73,85 @@
                                                      (make-projectnode 17.2208 "Project D" empty "Advisor D"
                                                                        false
                                                                        false))))
+; change-advisor: ProjectNode Number String -> ProjectNode
+; consumes a project (non-boolean BST), the number of a project, and the name of an advisor and produces a project updated with the new advisors name
+(define (change-advisor project number new-advisor)
+  (cond [(< number (projectnode-project-id project))
+         (make-projectnode
+          (projectnode-project-id project)
+          (projectnode-title project)
+          (projectnode-students project)
+          (projectnode-advisor project)
+          (change-advisor (projectnode-left project) number new-advisor)
+          (projectnode-right project))]
+        [(> number (projectnode-project-id project))
+         (make-projectnode
+          (projectnode-project-id project)
+          (projectnode-title project)
+          (projectnode-students project)
+          (projectnode-advisor project)
+          (projectnode-left project)
+          (change-advisor (projectnode-right project) number new-advisor))]
+        [else
+         (make-projectnode
+          (projectnode-project-id project)
+          (projectnode-title project)
+          (projectnode-students project)
+          new-advisor
+          (projectnode-left project)
+          (projectnode-right project))]))
 
+; number-of-projects-in-dept: BST Number -> Number
+; consumes a tree of projects and the number of a department and produces the number of projects from given department
+(define (number-of-projects-in-dept tree department-number)
+  (cond [(false? tree) 0]
+        [else
+         (cond
+           [(= (quotient (projectnode-project-id tree) 1000) department-number)
+            (+ 1
+               (number-of-projects-in-dept (projectnode-left tree) department-number)
+               (number-of-projects-in-dept (projectnode-right tree) department-number))]
+           [(< (quotient (projectnode-project-id tree) 1000) department-number)
+            (number-of-projects-in-dept (projectnode-right tree) department-number)]
+           [else
+            (number-of-projects-in-dept (projectnode-left tree) department-number)])]))
+
+; student-has-project?: BST String -> Boolean
+; consumes a tree of projects and an email and produces true if the email appears in the list of students working on a project
+(define (student-has-project? tree email)
+  (cond [(false? tree) false]
+        [(member email (projectnode-students tree)) true]
+        [else (or (student-has-project? (projectnode-left tree) email)
+                  (student-has-project? (projectnode-right tree) email))]))
+
+; list-of-projects-ordered-by-id-num: BST -> (listof String)
+; consumes a tree of projects and produces a list of titles of the projects sorted by ascending project number
+(define (list-of-projects-ordered-by-id-num tree)
+  (cond [(false? tree) empty]
+        [else (append (list-of-projects-ordered-by-id-num (projectnode-left tree))
+                      (list (projectnode-title tree))
+                      (list-of-projects-ordered-by-id-num (projectnode-right tree)))]))
+
+; create-project: BST Number String String -> BST
+(define (create-project tree number title advisor)
+  (cond [(false? tree) (make-projectnode number
+                                         title
+                                         empty
+                                         advisor
+                                         false
+                                         false)]
+        [(< number (projectnode-project-id tree))
+         (make-projectnode (projectnode-project-id tree)
+                           (projectnode-title tree)
+                           (projectnode-students tree)
+                           (projectnode-advisor tree)
+                           (create-project (projectnode-left tree) number title advisor)
+                           (projectnode-right tree))]
+        [(> number (projectnode-project-id tree))
+         (make-projectnode (projectnode-project-id tree)
+                           (projectnode-title tree)
+                           (projectnode-students tree)
+                           (projectnode-advisor tree)
+                           (projectnode-left tree)
+                           (create-project (projectnode-right tree) number title advisor))]
+        [else tree]))
