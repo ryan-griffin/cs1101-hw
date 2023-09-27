@@ -71,13 +71,21 @@
                                       false)
                     (make-projectnode 17.2207 "Project C" empty "Advisor C"
                                       false
-                                      (make-projectnode 17.2208 "Project D" empty "Advisor D" false false))))
+                                      (make-projectnode 17.2209 "Project D" empty "Advisor D" false false))))
 (define PROJECTS1 (make-projectnode 17.2201 "Project X" STUDENTS1 "Advisor X" false false))
 
 ; 4 )
 
 ; change-advisor: ProjectNode Number String -> ProjectNode
 ; consumes a project, the number of a project, and the name of an advisor and produces a project updated with the new advisors name
+(check-expect (change-advisor PROJECTS 17.2204 "New Advisor")
+              (make-projectnode 17.2205 "Project A" STUDENTS1 "Advisor A"
+                                (make-projectnode 17.2204 "Project B" STUDENTS2 "New Advisor"
+                                                  (make-projectnode 17.2203 "Project E" STUDENTS1 "Advisor E" false false)
+                                                  false)
+                                (make-projectnode 17.2207 "Project C" empty "Advisor C"
+                                                  false
+                                                  (make-projectnode 17.2209 "Project D" empty "Advisor D" false false))))
 (check-expect (change-advisor PROJECTS1 17.2201 "New Advisor")
               (make-projectnode 17.2201 "Project X" STUDENTS1 "New Advisor" false false))
 
@@ -168,7 +176,18 @@
 
 ; create-project: BST Number String String -> BST
 ; consumes a BST, project number,project title, and name of advisor, and creates a BST same as original but with a new project added
-(check-expect (make-projectnode 17.2201 "Project X" STUDENTS1 "Advisor X" false false) PROJECTS1)
+(check-expect (create-project PROJECTS 17.2211 "Project F" "Advisor F")
+              (make-projectnode 17.2205 "Project A" STUDENTS1 "Advisor A"
+                                (make-projectnode 17.2204 "Project B" STUDENTS2 "Advisor B"
+                                                  (make-projectnode 17.2203 "Project E" STUDENTS1 "Advisor E" false false)
+                                                  false)
+                                (make-projectnode 17.2207 "Project C" empty "Advisor C"
+                                                  false
+                                                  (make-projectnode 17.2209 "Project D" empty "Advisor D"
+                                                                    false
+                                                                    (make-projectnode 17.2211 "Project F" empty "Advisor F" false false)))))
+(check-expect (create-project false 17.2201 "Project X" "Advisor X")
+              (make-projectnode 17.2201 "Project X" empty "Advisor X" false false))
 
 (define (create-project tree number title advisor)
   (cond [(false? tree) (make-projectnode number
