@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-beginner-abbr-reader.ss" "lang")((modname Griffin-R-hw4) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname Griffin-R-hw4) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
 ; Ryan Griffin
 ; rmgriffin
 
@@ -64,17 +64,23 @@
 
 (define-struct projectnode (project-id title students advisor left right))
 
-(define PROJECTS (make-projectnode 17.2205 "Project A" STUDENTS1 "Advisor A"
-                                   (make-projectnode 17.2206 "Project B" STUDENTS2 "Advisor B"
-                                                     false
-                                                     false)
-                                   (make-projectnode 17.2207 "Project C" empty "Advisor C"
-                                                     false
-                                                     (make-projectnode 17.2208 "Project D" empty "Advisor D"
-                                                                       false
-                                                                       false))))
+(define PROJECTS
+  (make-projectnode 17.2205 "Project A" STUDENTS1 "Advisor A"
+                    (make-projectnode 17.2204 "Project B" STUDENTS2 "Advisor B"
+                                      (make-projectnode 17.2203 "Project E" STUDENTS1 "Advisor E" false false)
+                                      false)
+                    (make-projectnode 17.2207 "Project C" empty "Advisor C"
+                                      false
+                                      (make-projectnode 17.2208 "Project D" empty "Advisor D" false false))))
+(define PROJECTS1 (make-projectnode 17.2201 "Project X" STUDENTS1 "Advisor X" false false))
+
+; 4 )
+
 ; change-advisor: ProjectNode Number String -> ProjectNode
-; consumes a project (non-boolean BST), the number of a project, and the name of an advisor and produces a project updated with the new advisors name
+; consumes a project, the number of a project, and the name of an advisor and produces a project updated with the new advisors name
+(check-expect (change-advisor PROJECTS1 17.2201 "New Advisor")
+              (make-projectnode 17.2201 "Project X" STUDENTS1 "New Advisor" false false))
+
 (define (change-advisor project number new-advisor)
   (cond [(< number (projectnode-project-id project))
          (make-projectnode
@@ -101,38 +107,69 @@
           (projectnode-left project)
           (projectnode-right project))]))
 
+; 5 )
+
 ; number-of-projects-in-dept: BST Number -> Number
 ; consumes a tree of projects and the number of a department and produces the number of projects from given department
+(check-expect (number-of-projects-in-dept false 17) 0)
+(check-expect (number-of-projects-in-dept PROJECTS 17) 5)
+(check-expect (number-of-projects-in-dept PROJECTS 18) 0)
+
 (define (number-of-projects-in-dept tree department-number)
-  (cond [(false? tree) 0]
-        [else
-         (cond
-           [(= (quotient (projectnode-project-id tree) 1000) department-number)
-            (+ 1
-               (number-of-projects-in-dept (projectnode-left tree) department-number)
-               (number-of-projects-in-dept (projectnode-right tree) department-number))]
-           [(< (quotient (projectnode-project-id tree) 1000) department-number)
-            (number-of-projects-in-dept (projectnode-right tree) department-number)]
-           [else
-            (number-of-projects-in-dept (projectnode-left tree) department-number)])]))
+  (if (false? tree)
+      0
+      (local ((define project-id (floor (projectnode-project-id tree))))
+        (cond [(= project-id department-number)
+               (+ 1
+                  (number-of-projects-in-dept (projectnode-left tree) department-number)
+                  (number-of-projects-in-dept (projectnode-right tree) department-number))]
+              [(< project-id department-number)
+               (number-of-projects-in-dept (projectnode-right tree) department-number)]
+              [else (number-of-projects-in-dept (projectnode-left tree) department-number)]))))
+
+
+; 6 )
+
+; student-in-list?: String ListOfStudent-> Boolean
+; consumes an email address and a list of students and returns true if the email is in the list
+(define (student-in-list? email students)
+  (cond [(empty? students) false]
+        [(string=? email (student-email (first students))) true]
+        [else (student-in-list? email (rest students))]))
 
 ; student-has-project?: BST String -> Boolean
 ; consumes a tree of projects and an email and produces true if the email appears in the list of students working on a project
+(check-expect (student-has-project? false "jdoe@wpi.edu") false)
+(check-expect (student-has-project? PROJECTS "jdoe@wpi.edu") true)
+(check-expect (student-has-project? PROJECTS "rmgriffin@wpi.edu") true)
+(check-expect (student-has-project? PROJECTS "nonexistent@wpi.edu") false)
+
 (define (student-has-project? tree email)
   (cond [(false? tree) false]
-        [(member email (projectnode-students tree)) true]
+        [(student-in-list? email (projectnode-students tree)) true]
         [else (or (student-has-project? (projectnode-left tree) email)
                   (student-has-project? (projectnode-right tree) email))]))
 
+; 7 )
+
 ; list-of-projects-ordered-by-id-num: BST -> (listof String)
 ; consumes a tree of projects and produces a list of titles of the projects sorted by ascending project number
+(check-expect (list-of-projects-ordered-by-id-num false) empty)
+(check-expect (list-of-projects-ordered-by-id-num PROJECTS) (list "Project E" "Project B" "Project A" "Project C" "Project D"))
+(check-expect (list-of-projects-ordered-by-id-num PROJECTS1) (list "Project X"))
+
 (define (list-of-projects-ordered-by-id-num tree)
   (cond [(false? tree) empty]
         [else (append (list-of-projects-ordered-by-id-num (projectnode-left tree))
                       (list (projectnode-title tree))
                       (list-of-projects-ordered-by-id-num (projectnode-right tree)))]))
 
+; 8 )
+
 ; create-project: BST Number String String -> BST
+; consumes a BST, project number,project title, and name of advisor, and creates a BST same as original but with a new project added
+(check-expect (make-projectnode 17.2201 "Project X" STUDENTS1 "Advisor X" false false) PROJECTS1)
+
 (define (create-project tree number title advisor)
   (cond [(false? tree) (make-projectnode number
                                          title
