@@ -30,6 +30,72 @@
 
 (define-struct river (name ph bloom? tributaries))
 
-(define JEFFERSON (make-river "Jefferson" 7.1 false empty))
+(define JEFFERSON (make-river "Jefferson" 7.1 true empty))
 (define SUN (make-river "Sun" 11.5 false (list JEFFERSON)))
 (define MISSOURI (make-river "Missouri" 6 true (list SUN)))
+
+; 4 )
+
+; list-blooming-rivers: River -> ListOfString
+; consumes a river system and produces a list of the names of rivers with algal blooms
+(check-expect (list-blooming-rivers JEFFERSON) (list "Jefferson"))
+(check-expect (list-blooming-rivers MISSOURI) (list "Missouri" "Jefferson"))
+
+(define (list-blooming-rivers river)
+  (if (river-bloom? river)
+      (cons (river-name river)
+            (apply append (map list-blooming-rivers (river-tributaries river))))
+      (apply append (map list-blooming-rivers (river-tributaries river)))))
+
+; 5 )
+
+; any-too-acidic?: River -> Boolean
+; consumes a river system and returns true if any river in the system has a pH level below 6.5
+(check-expect (any-too-acidic? JEFFERSON) false)
+(check-expect (any-too-acidic? MISSOURI) true)
+
+(define (any-too-acidic? river)
+  (if (< (river-ph river) 6.5)
+      true
+      (ormap any-too-acidic? (river-tributaries river))))
+
+; 6 )
+
+; lower-all-ph: River -> River
+; consumes a river system and lowers the pH values of all rivers in the system by 0.2
+(check-expect (lower-all-ph JEFFERSON)
+              (make-river "Jefferson" 6.9 true empty))
+(check-expect (lower-all-ph SUN)
+              (make-river "Sun" 11.3 false (list (make-river "Jefferson" 6.9 true empty))))
+(check-expect (lower-all-ph MISSOURI)
+              (make-river "Missouri" 5.8 true (list (make-river "Sun" 11.3 false (list (make-river "Jefferson" 6.9 true empty))))))
+
+(define (lower-all-ph river)
+  (make-river
+   (river-name river)
+   (- (river-ph river) 0.2)
+   (river-bloom? river)
+   (map lower-all-ph (river-tributaries river))))
+
+; 7 )
+
+; find-subsystem: String River -> (U River False)
+; consumes the name of a river and a river system and returns the subsystem with the given name as the root, or false if not found
+(check-expect (find-subsystem "River" JEFFERSON) false)
+(check-expect (find-subsystem "Jefferson" JEFFERSON) JEFFERSON)
+(check-expect (find-subsystem "Jefferson" MISSOURI) JEFFERSON)
+(check-expect (find-subsystem "Sun" MISSOURI) SUN)
+
+(define (find-subsystem name river)
+  (if (string=? name (river-name river))
+      river
+      (local [(define subsystems (map (lambda (subriver) (find-subsystem name subriver)) (river-tributaries river)))]
+        (if (empty? (filter (lambda (subsystem) (not (false? subsystem))) subsystems))
+            false
+            (car (filter (lambda (subsystem) (not (false? subsystem))) subsystems))))))
+
+
+
+
+
+
