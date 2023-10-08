@@ -6,7 +6,7 @@
 
 ; 1 )
 
-; Email is a (make-email Natural String Boolean)
+; Email is a (make-email String String Boolean)
 ; interp:
 ;   User-Id is the unique identifier to a user
 ;   Message is the body of the email
@@ -17,7 +17,7 @@
 ;   - (cons Email Empty)
 (define-struct email (user-id message downloaded?))
 
-; Mailuser is a (make-mailuser Natural ListOfEmail)
+; Mailuser is a (make-mailuser String ListOfEmail)
 ; interp:
 ;   User-Id is the unique identifier of the user
 ;   Inbox is a list of emails
@@ -33,13 +33,66 @@
 
 ; 3 )
 
-; add-mailuser: Natural -> Void
-; consumes a user id and creates a new user in ListOfMailuser and returns void
+; add-mailuser: String -> Void
+; consumes a user id and creates a new user in mailsys and returns void
 (define (add-mailuser user-id)
-  (begin (cons (make-mailuser user-id empty) mailsys) void))
+  (set! mailsys (cons (make-mailuser user-id empty) mailsys)))
 
 ; 4 )
-; send-email: Natural Natural String -> Void
+
+; find-user: String -> Mailuser
+; consumes a user id and returns the matching user from mailsys
+(define (find-user user-id)
+  (first (filter (lambda (mailuser)
+                 (string=? (mailuser-user-id mailuser) user-id))
+               mailsys)))
+
+; send-email: String String String -> Void
 ; consumes sender user id, recipient user id and a message to send to the recipient and returns void
-(define (send-email sender-uid recipient-uid message)
-  (begin (...) void))
+(define (send-email sender-id recipient-id message)
+  (let ([recipient-user (find-user recipient-id)])
+    (set-mailuser-inbox! recipient-user
+                         (cons (make-email sender-id message false)
+                               (mailuser-inbox recipient-user)))))
+
+; 5 )
+
+; get-unread-emails: String -> ListOfEmail
+; Returns a list of undownloaded emails for the specified user and marks them as downloaded
+(define (get-unread-emails user-id)
+    (let ([unread-emails (filter (lambda (email)
+                                   (not (email-downloaded? email)))
+                                 (mailuser-inbox (find-user user-id)))])
+      (begin (for-each (lambda (email)
+                         (set-email-downloaded?! email true))
+                       unread-emails)
+             unread-emails)))
+
+; 6 )
+
+; most-emails: -> Mailuser
+; Returns the mailuser with the largest inbox or an error if the system is empty.
+(define (most-emails)
+  (if (empty? mailsys)
+      (error "No mailusers in the system")
+      (foldl (lambda (mailuser1 mailuser2)
+               (if (> (length (mailuser-inbox mailuser1))
+                      (length (mailuser-inbox mailuser2)))
+                   mailuser1
+                   mailuser2))
+             (first mailsys)
+             (rest mailsys))))
+
+; 8 )
+
+; total-characters: ListOfString -> Natural
+; Consumes a ListOfString and produces the sum of the characters of each string.
+(define (total-characters los)
+  (apply + (map string-length los)))
+
+; 9 )
+
+; all-caps: ListOfString -> ListOfString
+; Consumes a ListOfString and produces a ListOfString with all strings in uppercase.
+(define (all-caps los)
+  (map string-upcase los))
