@@ -83,6 +83,31 @@
              (first mailsys)
              (rest mailsys))))
 
+
+; 7 )
+
+(add-mailuser "user1")
+(add-mailuser "user2")
+mailsys
+
+(add-mailuser "user1")
+(add-mailuser "user2")
+(send-email "user1" "user2" "test")
+mailsys
+
+(add-mailuser "user1")
+(add-mailuser "user2")
+(send-email "user1" "user2" "test")
+(get-unread-emails "user2")
+
+(most-emails)
+(add-mailuser "user1")
+(add-mailuser "user2")
+(send-email "user1" "user2" "test")
+(send-email "user2" "user1" "test2")
+(send-email "user1" "user2" "test3")
+(most-emails)
+
 ; 8 )
 
 ; total-characters: ListOfString -> Natural
